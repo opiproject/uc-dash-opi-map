@@ -1,0 +1,40 @@
+2026-08-24T06:28:29Z PASS: PCIe DPU/SmartNIC 3 device(s): 0f:00.0 Ethernet controller [0200]: Mellanox Technologies MT42822 BlueField-2 integrated ConnectX-6 Dx network controller [15b3:a2d6] (rev 01)
+2026-08-24T06:28:29Z PASS: mgmt interface tmfifo_net0 UNKNOWN 192.168.100.1/30
+2026-08-24T06:28:29Z WARN: mgmt IP got 192.168.100.1, lab default is 192.168.100.2 (DPU 172.22.3.2); set --host-ip/--dpu-ip if this is intentional
+2026-08-24T06:28:29Z PASS: rshim service active
+2026-08-24T06:28:31Z PASS: ping DPU 172.22.3.2 reachable
+2026-08-24T06:28:31Z FAIL: TCP 172.22.3.2:50051 connection refused; on DPU run scripts/dpu_setup_and_verify.sh and open firewall 50051
+2026-08-24T06:28:31Z FAIL: gRPC CloudInfraService skipped because TCP :50051 failed
+2026-08-24T06:28:31Z PASS: PATH docker Docker version 27.5.1, build 9f9e405
+2026-08-24T06:28:31Z PASS: PATH cmake cmake version 3.22.1
+2026-08-24T06:28:31Z PASS: PATH g++ g++ (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0
+2026-08-24T06:28:31Z PASS: PATH pkg-config 0.29.2
+2026-08-24T06:28:31Z WARN: libsai.so not installed yet (expected before first SONiC/syncd image); install adapter after this pre-flight
+
+STATUS CHECK                        DETAIL
+------ -----                        ------
+PASS   PCIe DPU/SmartNIC            3 device(s): 0f:00.0 Ethernet controller [0200]: Mellanox Technologies MT42822 BlueField-2 integrated ConnectX-6 Dx network controller [15b3:a2d6] (rev 01)
+PASS   mgmt interface               tmfifo_net0 UNKNOWN 192.168.100.1/30
+WARN   mgmt IP                      got 192.168.100.1, lab default is 192.168.100.2 (DPU 172.22.3.2); set --host-ip/--dpu-ip if this is intentional
+PASS   rshim service                active
+PASS   ping DPU                     172.22.3.2 reachable
+FAIL   TCP 172.22.3.2:50051         connection refused; on DPU run scripts/dpu_setup_and_verify.sh and open firewall 50051
+FAIL   gRPC CloudInfraService       skipped because TCP :50051 failed
+PASS   PATH docker                  Docker version 27.5.1, build 9f9e405
+PASS   PATH cmake                   cmake version 3.22.1
+PASS   PATH g++                     g++ (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0
+PASS   PATH pkg-config              0.29.2
+WARN   libsai.so                    not installed yet (expected before first SONiC/syncd image); install adapter after this pre-flight
+
+Host pre-flight: 8 passed, 2 failed, 2 warnings (DPU 172.22.3.2:50051)
+
+Remediation:
+  PCIe     lspci -nn | grep -iE 'mellanox|bluefield|ipu|pensando'; dmesg | tail
+  RShim    apt-get install rshim; systemctl enable --now rshim
+           ip addr add 192.168.100.2/30 dev tmfifo_net0; ip link set tmfifo_net0 up
+  Ping     ping 172.22.3.2 — DPU must boot ARM OS; check USB/RShim cable / BMC
+  :50051  ssh to DPU and run: sudo ./scripts/dpu_setup_and_verify.sh
+  gRPC     grpc_cli ls --json_input --json_output 172.22.3.2:50051 -l
+  Tools    apt-get install build-essential cmake pkg-config docker.io
+  libsai   do NOT replace until this script is all PASS; then
+           sudo ./scripts/install_libsai_opi_adapter.sh --opi-server 172.22.3.2:50051

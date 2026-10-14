@@ -1,0 +1,160 @@
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: 2026 The dash-opi-map Authors
+#
+# Lightweight SONiC DASH control-plane stack for a generic Linux host
+# (no bare-metal SONiC image required).
+#
+# Official drop-ins (from sonic-buildimage) when you have them:
+#   SONIC_GNMI_IMAGE=docker-sonic-gnmi:latest
+#   SONIC_DASHORCH_IMAGE=docker-orchagent:latest
+#   SONIC_SYNCD_IMAGE=docker-syncd-vs:latest
+#
+#   docker compose -f deploy/docker-compose.sonic-stack.yml --profile mock-opi up --build
+#
+# Northbound:  gNMI :8080
+# Demo GUI:    http://127.0.0.1:8090  (DASH payload clicker → sonic-gnmi)
+# APPL_DB:     Redis :6379  (DB 0)
+# ASIC workq:  Redis DB 1   SAI_OPI:WORKQ
+# OPI:         from config/lab.env via labctl (DPU_IP:GRPC_PORT).
+#              OPI_SERVER_ADDRESS (CloudInfra :50051), OPI_SNAP_ADDRESS (SNAP :50052)
+
+name: sonic-dash-opi-lab
+
+services:
+  redis-appl-db:
+    image: redis:7-alpine
+    container_name: redis-appl-db
+    command: ["redis-server", "/etc/redis/redis.conf"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./database/redis.conf:/etc/redis/redis.conf:ro
+      - ./database/database_config.json:/etc/sonic/database_config.json:ro
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+    networks: [sonic-dash-lab]
+
+  sonic-gnmi:
+    image: ${SONIC_GNMI_IMAGE:-sonic-gnmi-lab:local}
+    build:
+      context: ./gnmi-lab
+      dockerfile: Dockerfile
+    container_name: sonic-gnmi
+    depends_on:
+      redis-appl-db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      REDIS_HOST: redis-appl-db
+      REDIS_PORT: "6379"
+      APPL_DB: "0"
+      GNMI_LISTEN: "[::]:8080"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import socket; s=socket.create_connection(('127.0.0.1',8080),2); s.close()",
+        ]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    networks: [sonic-dash-lab]
+
+  dash-gui:
+    image: dash-gui-lab:local
+    build:
+      context: ..
+      dockerfile: deploy/dash-gui-lab/Dockerfile
+    container_name: dash-gui
+    depends_on:
+      sonic-gnmi:
+        condition: service_healthy
+      redis-appl-db:
+        condition: service_healthy
+    ports:
+      - "8090:8090"
+    environment:
+      GNMI_TARGET: sonic-gnmi:8080
+      REDIS_HOST: redis-appl-db
+      REDIS_PORT: "6379"
+      APPL_DB: "0"
+      ADAPTER_LOG: /var/log/syncd/sai-opi-adapter.log
+      LISTEN: 0.0.0.0:8090
+    volumes:
+      - syncd-logs:/var/log/syncd:ro
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8090/api/health', timeout=2)",
+        ]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    networks: [sonic-dash-lab]
+
+  dashorch:
+    image: ${SONIC_DASHORCH_IMAGE:-dashorch-lab:local}
+    build:
+      context: ./dashorch-lab
+      dockerfile: Dockerfile
+    container_name: dashorch
+    depends_on:
+      redis-appl-db:
+        condition: service_healthy
+    environment:
+      REDIS_HOST: redis-appl-db
+      APPL_DB: "0"
+      ASIC_DB: "1"
+      STATE_DB: "6"
+    networks: [sonic-dash-lab]
+
+  syncd:
+    image: ${SONIC_SYNCD_IMAGE:-syncd-opi-lab:local}
+    build:
+      context: ..
+      dockerfile: deploy/syncd-lab/Dockerfile
+    container_name: syncd
+    depends_on:
+      redis-appl-db:
+        condition: service_healthy
+    environment:
+      REDIS_HOST: redis-appl-db
+      ASIC_DB: "1"
+      OPI_SERVER_ADDRESS: ${OPI_SERVER_ADDRESS:-host.docker.internal:50051}
+      OPI_SNAP_ADDRESS: ${OPI_SNAP_ADDRESS:-host.docker.internal:50052}
+      SAI_OPI_LOG: /var/log/sai-opi-adapter.log
+      ADAPTER_SO: /usr/lib/libsai_opi_adapter.so
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ${ADAPTER_SO:-../build/libsai_opi_adapter.so}:/usr/lib/libsai_opi_adapter.so:ro
+      - syncd-logs:/var/log
+    networks: [sonic-dash-lab]
+
+  opi-mock:
+    profiles: ["mock-opi"]
+    image: opi-mock-lab:local
+    build:
+      context: ..
+      dockerfile: tests/opi_server/Dockerfile
+    container_name: opi-mock
+    ports:
+      - "50051:50051"
+    networks: [sonic-dash-lab]
+
+networks:
+  sonic-dash-lab:
+    name: sonic-dash-lab
+    driver: bridge
+
+volumes:
+  syncd-logs:

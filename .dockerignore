@@ -1,0 +1,9 @@
+.git
+build
+**/__pycache__
+*.so
+scripts/*output*
+dpu/nvidia/dpu_cloudinfra_bridge
+dpu/nvidia/*.new
+dpu/intel/dpu_intel_bridge
+dpu/intel/*.new

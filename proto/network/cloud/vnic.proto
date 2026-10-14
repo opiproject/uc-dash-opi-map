@@ -1,0 +1,46 @@
+// Subset of opiproject/opi-api network/cloud/vnic.proto
+// Package, message names, and field numbers match upstream so the C++ SAI
+// wrapper and the Python mock server share a wire-compatible schema.
+
+syntax = "proto3";
+
+package opi_api.network.cloud.v1alpha1;
+
+option go_package = "dash-opi-map/dpu-cloudinfra/api/network/cloud";
+
+import "network/opinetcommon/networktypes.proto";
+
+message Vnic {
+  string name = 1;
+  VnicSpec spec = 2;
+  VnicStatus status = 3;
+}
+
+message VnicSpec {
+  string subnet_name_ref = 1;
+  network.opinetcommon.v1alpha1.Encap vnic_encap = 2;
+  bytes mac_address = 3;
+  bool source_guard_enable = 4;
+  network.opinetcommon.v1alpha1.Encap fabric_encap = 5;
+  bool vnf = 6;
+  repeated string ingress_v4_security_policy_name_ref = 7;
+  repeated string ingress_v6_security_policy_name_ref = 8;
+  repeated string egress_v4_security_policy_name_ref = 9;
+  repeated string egress_v6_security_policy_name_ref = 10;
+  oneof ifinfo {
+    string host_if_name_ref = 11;
+    string tunnel_name_ref = 12;
+  }
+  int32 max_sessions = 13;
+  bytes public_mac_address = 14;
+  bool allow_internet_access = 15;
+  int32 max_cps = 16;
+  int32 cps_burst = 17;
+  string primary_vnic_name_ref = 18;
+  string v4_route_table_name_ref = 19;
+  string v6_route_table_name_ref = 20;
+}
+
+message VnicStatus {
+  int32 hw_idx = 1;
+}

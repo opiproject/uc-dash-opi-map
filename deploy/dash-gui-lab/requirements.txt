@@ -1,0 +1,5 @@
+flask>=3.0.0
+redis>=5.0.0
+grpcio>=1.62.0
+grpcio-tools>=1.62.0
+protobuf>=4.25.0

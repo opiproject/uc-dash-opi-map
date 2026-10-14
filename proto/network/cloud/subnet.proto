@@ -1,0 +1,23 @@
+// Subset of opiproject/opi-api network/cloud/subnet.proto
+syntax = "proto3";
+
+package opi_api.network.cloud.v1alpha1;
+
+option go_package = "dash-opi-map/dpu-cloudinfra/api/network/cloud";
+
+import "network/opinetcommon/networktypes.proto";
+
+message Subnet {
+  string name = 1;
+  SubnetSpec spec = 2;
+  SubnetStatus status = 3;
+}
+
+message SubnetSpec {
+  string vpc_name_ref = 1;
+  network.opinetcommon.v1alpha1.Encap fabric_encap = 14;
+}
+
+message SubnetStatus {
+  int32 vnic_count = 2;
+}

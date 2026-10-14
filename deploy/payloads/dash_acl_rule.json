@@ -1,0 +1,12 @@
+{
+  "group_id": "acl-in-v4",
+  "rule_num": "1",
+  "priority": "10",
+  "action": "permit",
+  "terminating": "true",
+  "protocol": "6",
+  "src_addr": "10.0.0.0/8",
+  "dst_addr": "0.0.0.0/0",
+  "src_port": "0-65535",
+  "dst_port": "80"
+}

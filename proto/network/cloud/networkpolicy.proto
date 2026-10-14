@@ -1,0 +1,58 @@
+// Subset of opiproject/opi-api network/cloud/networkpolicy.proto
+syntax = "proto3";
+
+package opi_api.network.cloud.v1alpha1;
+
+option go_package = "dash-opi-map/dpu-cloudinfra/api/network/cloud";
+
+import "network/opinetcommon/networktypes.proto";
+
+message SecurityPolicy {
+  string name = 1;
+  SecurityPolicySpec spec = 2;
+  SecurityPolicyStatus status = 3;
+}
+
+message SecurityPolicySpec {
+  SecurityPolicyType type = 1;
+  network.opinetcommon.v1alpha1.IpAf address_family = 2;
+  bool stateless = 3;
+  network.opinetcommon.v1alpha1.SecurityRuleAction default_security_action = 4;
+  PolicyRuleFormat rule_format = 6;
+}
+
+message SecurityPolicyStatus {
+  int32 rule_count = 1;
+}
+
+message SecurityRule {
+  string name = 1;
+  SecurityRuleSpec spec = 2;
+  SecurityRuleStatus status = 3;
+}
+
+message SecurityRuleSpec {
+  string security_policy_name_ref = 1;
+  SecurityRuleAttrs attrs = 2;
+}
+
+message SecurityRuleAttrs {
+  int32 priority = 1;
+  network.opinetcommon.v1alpha1.RuleMatch match = 2;
+  network.opinetcommon.v1alpha1.SecurityRuleAction action = 3;
+  bool terminating = 4;
+}
+
+message SecurityRuleStatus {}
+
+enum SecurityPolicyType {
+  SECURITY_POLICY_TYPE_UNSPECIFIED = 0;
+  SECURITY_POLICY_TYPE_UNDERLAY = 1;
+  SECURITY_POLICY_TYPE_TENANT = 2;
+}
+
+enum PolicyRuleFormat {
+  POLICY_RULE_FORMAT_UNSPECIFIED = 0;
+  POLICY_RULE_FORMAT_FLATTENED = 1;
+  POLICY_RULE_FORMAT_COMPACT = 2;
+}

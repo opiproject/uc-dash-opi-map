@@ -1,0 +1,94 @@
+// Subset of opiproject/opi-api network/opinetcommon/networktypes.proto
+// Field numbers match upstream. Used by the C++ client and the Python mock server.
+
+syntax = "proto3";
+
+package opi_api.network.opinetcommon.v1alpha1;
+
+option go_package = "dash-opi-map/dpu-cloudinfra/api/network/opinetcommon";
+
+message IPAddress {
+  IpAf af = 1;
+  oneof v4_or_v6 {
+    fixed32 v4_addr = 2;
+    bytes v6_addr = 3;
+  }
+}
+
+message IPPrefix {
+  IPAddress addr = 1;
+  int32 len = 2;
+}
+
+message PortRange {
+  int32 port_low = 1;
+  int32 port_high = 2;
+}
+
+message RuleL3Match {
+  oneof protomatch {
+    int32 proto_num = 1;
+    WildcardMatch proto_wild_card = 2;
+  }
+  oneof srcmatch {
+    IPPrefix src_prefix = 3;
+  }
+  oneof dstmatch {
+    IPPrefix dst_prefix = 7;
+  }
+}
+
+message PortMatch {
+  PortRange src_port_range = 1;
+  PortRange dst_port_range = 2;
+}
+
+message RuleL4Match {
+  oneof l4info {
+    PortMatch ports = 1;
+  }
+}
+
+message RuleMatch {
+  RuleL3Match l3_match = 1;
+  RuleL4Match l4_match = 2;
+}
+
+message EncapVal {
+  oneof val {
+    int32 vlan_id = 1;
+    int32 mpls_tag = 2;
+    int32 vnid = 3;
+    int32 vsid = 5;
+  }
+}
+
+message Encap {
+  EncapType type = 1;
+  EncapVal value = 2;
+}
+
+enum IpAf {
+  IP_AF_UNSPECIFIED = 0;
+  IP_AF_INET = 1;
+  IP_AF_INET6 = 2;
+}
+
+enum EncapType {
+  ENCAP_TYPE_UNSPECIFIED = 0;
+  ENCAP_TYPE_DOT1Q = 1;
+  ENCAP_TYPE_MPLS_OVER_UDP = 2;
+  ENCAP_TYPE_VXLAN = 3;
+  ENCAP_TYPE_NVGRE = 4;
+}
+
+enum SecurityRuleAction {
+  SECURITY_RULE_ACTION_NONE = 0;
+  SECURITY_RULE_ACTION_ALLOW = 1;
+  SECURITY_RULE_ACTION_DENY = 2;
+}
+
+enum WildcardMatch {
+  WILDCARD_MATCH_NONE = 0;
+  WILDCARD_MATCH_ANY = 256;
+}

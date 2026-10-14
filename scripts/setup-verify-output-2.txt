@@ -1,0 +1,45 @@
+2026-08-24T06:15:15Z re-exec on root@172.22.3.2
+sudo: unable to resolve host bf2: Temporary failure in name resolution
+2026-08-24T06:15:26Z PASS: DPU Linux kernel Linux 5.15.0-1042-bluefield aarch64
+2026-08-24T06:15:26Z PASS: NVIDIA DOCA / mlx5 runtime modules or DOCA/SPDK units present
+2026-08-24T06:15:26Z PASS: socket directory /var/tmp is traversable
+2026-08-24T06:15:26Z PASS: vendor IPC sockets /var/tmp/spdk.sock 
+2026-08-24T06:15:26Z PASS: docker Docker version 26.1.3, build b72abbb
+2026-08-24T06:15:26Z pulling ghcr.io/opiproject/opi-nvidia-bridge:main
+main: Pulling from opiproject/opi-nvidia-bridge
+bca4290a9639: Pulling fs layer
+00d2a363f7fd: Pulling fs layer
+07a17332a2f4: Pulling fs layer
+0402c7fb1535: Pulling fs layer
+0402c7fb1535: Waiting
+bca4290a9639: Download complete
+bca4290a9639: Pull complete
+07a17332a2f4: Verifying Checksum
+07a17332a2f4: Download complete
+00d2a363f7fd: Verifying Checksum
+00d2a363f7fd: Download complete
+00d2a363f7fd: Pull complete
+0402c7fb1535: Verifying Checksum
+0402c7fb1535: Download complete
+07a17332a2f4: Pull complete
+0402c7fb1535: Pull complete
+Digest: sha256:52bafb8581739fa919811533b7889b8d319308876b1656b45c628a2e0cb61294
+Status: Downloaded newer image for ghcr.io/opiproject/opi-nvidia-bridge:main
+ghcr.io/opiproject/opi-nvidia-bridge:main
+66c91e357d56129835707bf69a60b97ce2c601d75ed7bc38730706bf57e4bab1
+2026-08-24T06:15:51Z PASS: OPI bridge launch opi-dpu-bridge image=ghcr.io/opiproject/opi-nvidia-bridge:main -v /var/tmp:/var/tmp -p 50051:50051
+2026-08-24T06:15:51Z PASS: TCP listener :50051 LISTEN 0      4096            [::]:50051         [::]:*    users:(("docker-proxy",pid=2033438,fd=4))               
+2026-08-24T06:17:17Z WARN: CloudInfraService TCP up but grpc_cli ls did not list CloudInfraService (install grpc_cli or allow namely/grpc-cli)
+
+STATUS CHECK                        DETAIL
+------ -----                        ------
+PASS   DPU Linux kernel             Linux 5.15.0-1042-bluefield aarch64
+PASS   NVIDIA DOCA / mlx5 runtime   modules or DOCA/SPDK units present
+PASS   socket directory             /var/tmp is traversable
+PASS   vendor IPC sockets           /var/tmp/spdk.sock 
+PASS   docker                       Docker version 26.1.3, build b72abbb
+PASS   OPI bridge launch            opi-dpu-bridge image=ghcr.io/opiproject/opi-nvidia-bridge:main -v /var/tmp:/var/tmp -p 50051:50051
+PASS   TCP listener :50051          LISTEN 0      4096            [::]:50051         [::]:*    users:(("docker-proxy",pid=2033438,fd=4))               
+WARN   CloudInfraService            TCP up but grpc_cli ls did not list CloudInfraService (install grpc_cli or allow namely/grpc-cli)
+
+DPU bring-up: 7 passed, 0 failed, 1 warnings (vendor=nvidia image=ghcr.io/opiproject/opi-nvidia-bridge:main)

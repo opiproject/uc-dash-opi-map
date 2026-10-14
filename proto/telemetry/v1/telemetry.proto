@@ -1,0 +1,29 @@
+// OPI inventory/telemetry surface for per-VNIC (DASH ENI) packet counters.
+// Official inventory.proto is SMBIOS only; dataplane counters are served by
+// TelemetryService on the same gRPC endpoint as CloudInfraService.
+syntax = "proto3";
+
+package opi_api.telemetry.v1;
+
+option go_package = "dash-opi-map/dpu-cloudinfra/api/telemetry/v1";
+
+service TelemetryService {
+  // Per-VNIC dataplane counters (ENI in DASH).
+  rpc GetVnicMetrics(GetVnicMetricsRequest) returns (VnicMetrics);
+}
+
+message GetVnicMetricsRequest {
+  // Resource name, e.g. vnic/{id} (same name CloudInfraService assigned).
+  string name = 1;
+}
+
+message VnicMetrics {
+  uint64 rx_bytes = 1;
+  uint64 rx_packets = 2;
+  uint64 tx_bytes = 3;
+  uint64 tx_packets = 4;
+  uint64 rx_drops = 5;
+  uint64 tx_drops = 6;
+  uint64 policy_drops = 7;
+  uint64 forwarding_drops = 8;
+}

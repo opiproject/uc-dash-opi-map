@@ -1,0 +1,34 @@
+2026-08-24T05:56:17Z re-exec on root@172.22.3.2
+sudo: unable to resolve host bf2: Temporary failure in name resolution
+2026-08-24T05:56:28Z PASS: DPU Linux kernel Linux 5.15.0-1042-bluefield aarch64
+2026-08-24T05:56:28Z PASS: NVIDIA DOCA / mlx5 runtime modules or DOCA/SPDK units present
+2026-08-24T05:56:28Z PASS: socket directory /var/tmp is traversable
+2026-08-24T05:56:28Z PASS: vendor IPC sockets /var/tmp/spdk.sock 
+2026-08-24T05:56:29Z PASS: docker Docker version 26.1.3, build b72abbb
+2026-08-24T05:56:29Z pulling ghcr.io/opiproject/opi-nvidia-bridge:main
+main: Pulling from opiproject/opi-nvidia-bridge
+bca4290a9639: Pulling fs layer
+00d2a363f7fd: Pulling fs layer
+07a17332a2f4: Pulling fs layer
+0402c7fb1535: Pulling fs layer
+write /var/lib/docker/tmp/GetImageBlob3725640205: no space left on device
+2026-08-24T05:56:52Z FAIL: OPI bridge launch docker run ghcr.io/opiproject/opi-nvidia-bridge:main failed; docker logs opi-dpu-bridge
+2026-08-24T05:56:52Z FAIL: TCP listener :50051 ss -lntp has no :50051; docker logs opi-dpu-bridge
+
+STATUS CHECK                        DETAIL
+------ -----                        ------
+PASS   DPU Linux kernel             Linux 5.15.0-1042-bluefield aarch64
+PASS   NVIDIA DOCA / mlx5 runtime   modules or DOCA/SPDK units present
+PASS   socket directory             /var/tmp is traversable
+PASS   vendor IPC sockets           /var/tmp/spdk.sock 
+PASS   docker                       Docker version 26.1.3, build b72abbb
+FAIL   OPI bridge launch            docker run ghcr.io/opiproject/opi-nvidia-bridge:main failed; docker logs opi-dpu-bridge
+FAIL   TCP listener :50051          ss -lntp has no :50051; docker logs opi-dpu-bridge
+
+DPU bring-up: 5 passed, 2 failed, 0 warnings (vendor=nvidia image=ghcr.io/opiproject/opi-nvidia-bridge:main)
+
+Remediation:
+  - Kernel/drivers: vendor BFB/DOCA/IPDK image; systemctl status mlx5 / infrap4d
+  - Sockets: start SPDK/DOCA/IPDK first; ls -l /var/tmp/*.sock; chmod 0660
+  - Bridge: docker logs opi-dpu-bridge; OPI_BRIDGE_IMAGE=... bash
+  - :50051: docker run -p 50051:50051 and iptables -I INPUT -p tcp --dport 50051 -j ACCEPT

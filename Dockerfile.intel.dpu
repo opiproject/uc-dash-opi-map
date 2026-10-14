@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: 2026 The dash-opi-map Authors
+#
+# Cross-compile Intel Phase A CloudInfra (linux/arm64) on an x86 host.
+# Do NOT pass --platform linux/arm64 (same reason as Dockerfile.dpu).
+#
+#   ./scripts/build_intel_arm64.sh
+
+FROM golang:1.22-bookworm AS builder
+ARG TARGETOS=linux
+ARG TARGETARCH=arm64
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      protobuf-compiler libprotobuf-dev \
+    && rm -rf /var/lib/apt/lists/*
+RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.34.2 \
+ && go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.5.1
+WORKDIR /src
+COPY proto /proto
+COPY dpu/nvidia /src/nvidia
+COPY dpu/intel /src/intel
+ENV PROTO_ROOT=/proto
+ENV PATH="/go/bin:${PATH}"
+RUN chmod +x /src/nvidia/generate.sh && cd /src/nvidia && ./generate.sh && go mod tidy
+WORKDIR /src/intel
+RUN go mod tidy
+RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
+    go build -trimpath -ldflags="-s -w" \
+    -o /dpu_intel_bridge ./cmd/dpu_intel_bridge
+
+FROM scratch
+COPY --from=builder /dpu_intel_bridge /dpu_intel_bridge
+ENTRYPOINT ["/dpu_intel_bridge"]
+CMD ["-listen", ":50051"]

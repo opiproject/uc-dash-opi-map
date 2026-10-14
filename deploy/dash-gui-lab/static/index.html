@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>DASH → OPI lab</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --panel: #1a2330;
+      --border: #2d3d52;
+      --text: #e8eef5;
+      --muted: #8aa0b8;
+      --accent: #3dd6c6;
+      --go: #3ecf8e;
+      --stop: #e06c75;
+      --warn: #e5c07b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: "Segoe UI", system-ui, sans-serif;
+      background: var(--bg); color: var(--text); font-size: 16px;
+    }
+    header {
+      padding: 1rem 1.5rem; border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
+    }
+    header h1 { margin: 0; font-size: 1.35rem; font-weight: 650; }
+    header p { margin: 0; color: var(--muted); font-size: 0.95rem; }
+    #gnmi { font-family: ui-monospace, monospace; color: var(--accent); }
+    main {
+      display: grid; grid-template-columns: minmax(280px, 1fr) 1.4fr;
+      gap: 1rem; padding: 1rem 1.5rem 2rem;
+    }
+    @media (max-width: 960px) { main { grid-template-columns: 1fr; } }
+    section {
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 10px; padding: 1rem 1.1rem;
+    }
+    h2 { margin: 0 0 0.7rem; font-size: 0.8rem; letter-spacing: 0.08em;
+         text-transform: uppercase; color: var(--muted); }
+    .row { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-bottom: 0.85rem; }
+    button {
+      cursor: pointer; border: 1px solid var(--border); background: #243044;
+      color: var(--text); border-radius: 8px; padding: 0.55rem 0.8rem;
+      font-size: 0.95rem;
+    }
+    button:hover { border-color: var(--accent); }
+    button:disabled { opacity: 0.45; cursor: wait; }
+    button.bundle { background: #1e3d38; border-color: #2a6b62; color: var(--accent); font-weight: 600; }
+    button.del { background: #3a2428; border-color: #6b3340; }
+    button.del:hover { border-color: var(--stop); }
+    #toast {
+      min-height: 1.4rem; font-family: ui-monospace, monospace; font-size: 0.85rem;
+      color: var(--warn);
+    }
+    #toast.ok { color: var(--go); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    th, td { text-align: left; padding: 0.25rem 0.4rem; border-bottom: 1px solid var(--border);
+             font-family: ui-monospace, monospace; vertical-align: top; }
+    th { color: var(--muted); font-weight: 500; }
+    pre {
+      margin: 0; max-height: 22rem; overflow: auto; font-size: 0.78rem;
+      line-height: 1.35; color: #c5d4e4; white-space: pre-wrap;
+    }
+    .empty { color: var(--muted); font-style: italic; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>DASH gNMI → CloudInfra</h1>
+      <p>Browser → this GUI → <span id="gnmi">sonic-gnmi</span> → APPL_DB → dashorch → syncd → DPU</p>
+    </div>
+    <p id="gnmi-state">gNMI …</p>
+  </header>
+  <main>
+    <div>
+      <section>
+        <h2>Demo bundles</h2>
+        <div class="row" id="bundles"></div>
+        <h2>Create</h2>
+        <div class="row" id="creates"></div>
+        <h2>Delete</h2>
+        <div class="row" id="deletes"></div>
+        <p id="toast"></p>
+      </section>
+    </div>
+    <div>
+      <section>
+        <h2>APPL_DB DASH_*</h2>
+        <div id="appl" class="empty">polling…</div>
+      </section>
+      <section style="margin-top:1rem">
+        <h2>Adapter log (CreateVnic / DeleteVnic)</h2>
+        <pre id="log" class="empty">waiting for /var/log/syncd/sai-opi-adapter.log</pre>
+      </section>
+    </div>
+  </main>
+  <script>
+    const toast = (msg, ok) => {
+      const el = document.getElementById("toast");
+      el.textContent = msg || "";
+      el.className = ok ? "ok" : "";
+    };
+    const post = async (url, body) => {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(body)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.ok === false) throw new Error(data.error || res.statusText);
+      return data;
+    };
+    const busy = (on) => document.querySelectorAll("button").forEach(b => b.disabled = on);
+    const renderCatalog = (cat) => {
+      document.getElementById("gnmi").textContent = cat.gnmi;
+      const bundles = document.getElementById("bundles");
+      Object.entries(cat.bundles).forEach(([id, b]) => {
+        const btn = document.createElement("button");
+        btn.className = id.startsWith("delete") ? "bundle del" : "bundle";
+        btn.textContent = b.label;
+        btn.onclick = async () => {
+          busy(true);
+          toast("gNMI " + b.label + "…");
+          try {
+            await post("/api/bundle", {id});
+            toast(b.label + " ok", true);
+            await refresh();
+          } catch (e) { toast(e.message); }
+          busy(false);
+        };
+        bundles.appendChild(btn);
+      });
+      const creates = document.getElementById("creates");
+      const deletes = document.getElementById("deletes");
+      cat.actions.forEach(a => {
+        const btn = document.createElement("button");
+        btn.textContent = a.label;
+        if (a.op === "delete") btn.className = "del";
+        btn.onclick = async () => {
+          busy(true);
+          toast(a.label + "…");
+          try {
+            await post("/api/action", {id: a.id});
+            toast(a.label + " ok", true);
+            await refresh();
+          } catch (e) { toast(e.message); }
+          busy(false);
+        };
+        (a.op === "delete" ? deletes : creates).appendChild(btn);
+      });
+    };
+    const refresh = async () => {
+      const res = await fetch("/api/status");
+      const st = await res.json();
+      document.getElementById("gnmi-state").textContent =
+        st.gnmi_up ? "gNMI up" : "gNMI down";
+      document.getElementById("gnmi-state").style.color = st.gnmi_up ? "var(--go)" : "var(--stop)";
+      const appl = document.getElementById("appl");
+      const db = st.appl_db || {};
+      if (db._error) { appl.textContent = db._error; appl.className = "empty"; return; }
+      const keys = Object.keys(db);
+      if (!keys.length) { appl.textContent = "no DASH_* keys"; appl.className = "empty"; }
+      else {
+        appl.className = "";
+        appl.innerHTML = "<table><thead><tr><th>key</th><th>fields</th></tr></thead><tbody>" +
+          keys.map(k => "<tr><td>" + k + "</td><td>" +
+            Object.entries(db[k]).map(([f,v]) => f + "=" + v).join(" ") +
+            "</td></tr>").join("") + "</tbody></table>";
+      }
+      const log = document.getElementById("log");
+      if (st.log) { log.textContent = st.log; log.className = ""; }
+    };
+    (async () => {
+      const cat = await (await fetch("/api/catalog")).json();
+      renderCatalog(cat);
+      await refresh();
+      setInterval(refresh, 2000);
+    })().catch(e => toast(e.message));
+  </script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+// Subset of opiproject/opi-api network/cloud/route.proto
+syntax = "proto3";
+
+package opi_api.network.cloud.v1alpha1;
+
+option go_package = "dash-opi-map/dpu-cloudinfra/api/network/cloud";
+
+import "network/opinetcommon/networktypes.proto";
+
+message RouteTable {
+  string name = 1;
+  RouteTableSpec spec = 2;
+  RouteTableStatus status = 3;
+}
+
+message RouteTableSpec {
+  network.opinetcommon.v1alpha1.IpAf af = 1;
+  bool priority_enable = 2;
+}
+
+message RouteTableStatus {
+  int32 vnic_count = 3;
+}
+
+message VPCPeerNhInfo {
+  string vpc_name_ref = 1;
+  string route_table_name_ref = 2;
+}
+
+message OverlayNextHopIPInfo {
+  repeated network.opinetcommon.v1alpha1.IPAddress nexthop_ip = 1;
+  string vpc_name_ref = 3;
+}
+
+message RouteAttrs {
+  network.opinetcommon.v1alpha1.IPPrefix prefix = 1;
+  RouteClass route_class = 2;
+  oneof nh {
+    OverlayNextHopIPInfo overlay_nh_ip_info = 5;
+    string tunnel_name_ref = 9;
+    VPCPeerNhInfo vpc_nh_info = 8;
+    bool eval_mapping = 11;
+  }
+}
+
+message Route {
+  string name = 1;
+  RouteSpec spec = 2;
+  RouteStatus status = 3;
+}
+
+message RouteSpec {
+  string route_table_name_ref = 1;
+  RouteAttrs attrs = 2;
+}
+
+message RouteStatus {}
+
+enum RouteClass {
+  ROUTE_CLASS_UNSPECIFIED = 0;
+  ROUTE_CLASS_INTERNET = 1;
+  ROUTE_CLASS_SERVICE = 2;
+  ROUTE_CLASS_VPC = 3;
+}

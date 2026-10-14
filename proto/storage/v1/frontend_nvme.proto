@@ -1,0 +1,55 @@
+// SPDX-License-Identifier: Apache-2.0
+// SPDX-FileCopyrightText: 2026 The dash-opi-map Authors
+//
+// Slim FrontendNvmeService subset for SNAP (opi-nvidia-bridge). Field numbers
+// match opiproject/opi-api storage/frontend_nvme.proto + opicommon.proto.
+// Official sources use proto3 `optional` (protobuf ≥ 3.15); Ubuntu jammy ships
+// 3.12, so this file is the host-adapter compile surface.
+syntax = "proto3";
+
+package opi_api.storage.v1;
+
+import "google/protobuf/wrappers.proto";
+
+service FrontendNvmeService {
+  rpc CreateNvmeController(CreateNvmeControllerRequest) returns (NvmeController);
+}
+
+// Transport type value options (opicommon.proto).
+enum NvmeTransportType {
+  NVME_TRANSPORT_TYPE_UNSPECIFIED = 0;
+  NVME_TRANSPORT_TYPE_FC = 1;
+  NVME_TRANSPORT_TYPE_PCIE = 2;
+  NVME_TRANSPORT_TYPE_RDMA = 3;
+  NVME_TRANSPORT_TYPE_TCP = 4;
+  NVME_TRANSPORT_TYPE_CUSTOM = 5;
+}
+
+// xPU-internal PCI endpoint (opicommon.proto PciEndpoint). SNAP encodes these
+// as google.protobuf.Int32Value, not raw int32.
+message PciEndpoint {
+  google.protobuf.Int32Value port_id = 1;
+  google.protobuf.Int32Value physical_function = 2;
+  google.protobuf.Int32Value virtual_function = 3;
+}
+
+message NvmeControllerSpec {
+  int32 nvme_controller_id = 1;
+  NvmeTransportType trtype = 2;
+  oneof endpoint {
+    PciEndpoint pcie_id = 3;
+  }
+  int32 max_nsq = 5;
+  int32 max_ncq = 6;
+}
+
+message NvmeController {
+  string name = 1;
+  NvmeControllerSpec spec = 2;
+}
+
+message CreateNvmeControllerRequest {
+  string parent = 1;
+  NvmeController nvme_controller = 2;
+  string nvme_controller_id = 3;
+}

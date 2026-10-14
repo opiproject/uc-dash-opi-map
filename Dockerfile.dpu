@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: 2026 The dash-opi-map Authors
+#
+# Cross-compile NVIDIA BlueField CloudInfra (linux/arm64) on an x86 host.
+# Do NOT pass --platform linux/arm64 to this file: that pulls ARM Ubuntu
+# and `RUN apt-get` then fails with "exec /bin/sh: exec format error".
+#
+# Builder runs as the host architecture and sets GOARCH=arm64.
+# Final image is scratch + static binary (no apt).
+#
+# Extract the ELF:
+#   ./scripts/build_cloudinfra_arm64.sh
+#   scp -r dash-opi-map root@172.22.3.2:
+
+FROM golang:1.22-bookworm AS builder
+ARG TARGETOS=linux
+ARG TARGETARCH=arm64
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      protobuf-compiler libprotobuf-dev \
+    && rm -rf /var/lib/apt/lists/*
+RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.34.2 \
+ && go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.5.1
+WORKDIR /src
+COPY proto /proto
+COPY dpu/nvidia /src
+ENV PROTO_ROOT=/proto
+ENV PATH="/go/bin:${PATH}"
+RUN chmod +x generate.sh && ./generate.sh
+RUN go mod tidy
+RUN go test ./pkg/datapath
+RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
+    go build -trimpath -ldflags="-s -w" \
+    -o /dpu_cloudinfra_bridge ./cmd/dpu_cloudinfra_bridge
+
+FROM scratch
+COPY --from=builder /dpu_cloudinfra_bridge /dpu_cloudinfra_bridge
+ENTRYPOINT ["/dpu_cloudinfra_bridge"]
+CMD ["-listen", ":50051"]

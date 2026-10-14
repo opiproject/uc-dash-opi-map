@@ -1,0 +1,38 @@
+// Subset of opiproject/opi-api network/cloud/vpc.proto
+syntax = "proto3";
+
+package opi_api.network.cloud.v1alpha1;
+
+option go_package = "dash-opi-map/dpu-cloudinfra/api/network/cloud";
+
+import "network/opinetcommon/networktypes.proto";
+
+message Vpc {
+  string name = 1;
+  VpcSpec spec = 2;
+  VpcStatus status = 3;
+}
+
+message VpcSpec {
+  VPCType type = 1;
+  string v4_route_table_name_ref = 2;
+  string v6_route_table_name_ref = 3;
+  repeated string ingress_v4_security_policy_name_ref = 4;
+  repeated string ingress_v6_security_policy_name_ref = 5;
+  repeated string egress_v4_security_policy_name_ref = 6;
+  repeated string egress_v6_security_policy_name_ref = 7;
+  bytes virtual_router_mac = 8;
+  network.opinetcommon.v1alpha1.Encap fabric_encap = 9;
+  int32 tos = 10;
+}
+
+message VpcStatus {
+  int32 subnet_count = 3;
+}
+
+enum VPCType {
+  VPC_TYPE_UNSPECIFIED = 0;
+  VPC_TYPE_UNDERLAY = 1;
+  VPC_TYPE_TENANT = 2;
+  VPC_TYPE_CONTROL = 3;
+}

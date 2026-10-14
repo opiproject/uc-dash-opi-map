@@ -1,0 +1,39 @@
+// SPDX-License-Identifier: Apache-2.0
+// SPDX-FileCopyrightText: 2026 The dash-opi-map Authors
+//
+// Slim IPsecService subset matching SNAP / opi-api security/v1 generated stubs:
+//   /opi_api.security.v1.IPsecService/IPsecInitiate
+//   /opi_api.security.v1.IPsecService/IPsecRekey
+// Informal docs sometimes call the rekey payload CreateIPsecRekeyRequest; the
+// wire type is IPsecRekeyRequest.
+syntax = "proto3";
+
+package opi_api.security.v1;
+
+service IPsecService {
+  rpc IPsecInitiate(IPsecInitiateRequest) returns (IPsecInitiateResponse);
+  rpc IPsecRekey(IPsecRekeyRequest) returns (IPsecRekeyResponse);
+}
+
+message IPsecInitiateRequest {
+  string child = 1;
+  string ike = 2;
+  string timeout = 3;
+  string loglevel = 4;
+}
+
+message IPsecInitiateResponse {}
+
+// SNAP / opi-api v1 name. CreateIPsecRekeyRequest is an informal alias.
+message IPsecRekeyRequest {
+  string child = 1;
+  string ike = 2;
+  uint64 child_id = 3;
+  uint64 ike_id = 4;
+  string reauth = 5;
+}
+
+message IPsecRekeyResponse {
+  string success = 1;
+  uint32 matches = 2;
+}

@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+build/
+tests/opi_server/_gen/
+dpu/nvidia/dpu_cloudinfra_bridge
+
+# Local lab topology (copy from config/lab.env.example)
+config/lab.env
+config/stolen-ovsbr1.ports

@@ -1,0 +1,68 @@
+2026-08-24T06:46:45Z re-exec on root@172.22.3.2
+sudo: unable to resolve host bf2: Temporary failure in name resolution
+2026-08-24T06:46:52Z PASS: DPU Linux kernel Linux 5.15.0-1042-bluefield aarch64
+2026-08-24T06:46:52Z PASS: NVIDIA DOCA / mlx5 runtime modules or DOCA/SPDK units present
+2026-08-24T06:46:52Z PASS: socket directory /var/tmp is traversable
+2026-08-24T06:46:52Z PASS: vendor IPC sockets /var/tmp/spdk.sock 
+2026-08-24T06:46:52Z PASS: docker Docker version 26.1.3, build b72abbb
+2026-08-24T06:46:52Z opi-dpu-bridge is crash-looping (restarting true true); will recreate with Redis
+2026-08-24T06:46:52Z pulling ghcr.io/opiproject/opi-nvidia-bridge:main
+main: Pulling from opiproject/opi-nvidia-bridge
+Digest: sha256:52bafb8581739fa919811533b7889b8d319308876b1656b45c628a2e0cb61294
+Status: Image is up to date for ghcr.io/opiproject/opi-nvidia-bridge:main
+ghcr.io/opiproject/opi-nvidia-bridge:main
+2026-08-24T06:47:08Z starting opi-redis (redis:7.2-alpine)
+7.2-alpine: Pulling from library/redis
+2dd7199cff98: Pulling fs layer
+f771ad69e7ef: Pulling fs layer
+1720d483913a: Pulling fs layer
+cadb234e4b28: Pulling fs layer
+920287d5a056: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+62e27adba00b: Pulling fs layer
+cadb234e4b28: Waiting
+920287d5a056: Waiting
+4f4fb700ef54: Waiting
+62e27adba00b: Waiting
+f771ad69e7ef: Verifying Checksum
+f771ad69e7ef: Download complete
+1720d483913a: Verifying Checksum
+1720d483913a: Download complete
+2dd7199cff98: Verifying Checksum
+2dd7199cff98: Download complete
+2dd7199cff98: Pull complete
+f771ad69e7ef: Pull complete
+1720d483913a: Pull complete
+4f4fb700ef54: Verifying Checksum
+4f4fb700ef54: Download complete
+920287d5a056: Verifying Checksum
+920287d5a056: Download complete
+cadb234e4b28: Verifying Checksum
+cadb234e4b28: Download complete
+62e27adba00b: Verifying Checksum
+62e27adba00b: Download complete
+cadb234e4b28: Pull complete
+920287d5a056: Pull complete
+4f4fb700ef54: Pull complete
+62e27adba00b: Pull complete
+Digest: sha256:ccd6aa8d45ff3f033d6fa15b8cc1a50579f65c89f38cf9bb607a954c4f2128ed
+Status: Downloaded newer image for redis:7.2-alpine
+docker.io/library/redis:7.2-alpine
+8457963b7263aff6923392418ceec6c66b5bac5ff67992a5cf0d21bf3773828e
+e252eb5351b9176ac9fc09d9442a8bed276e63d513656cd706ea208bd6aedaad
+2026-08-24T06:47:34Z PASS: OPI bridge launch opi-dpu-bridge image=ghcr.io/opiproject/opi-nvidia-bridge:main -v /var/tmp:/var/tmp -p 50051:50051
+2026-08-24T06:47:34Z PASS: TCP listener :50051 LISTEN 0      4096         0.0.0.0:50051      0.0.0.0:*    users:(("docker-proxy",pid=2059260,fd=4))               
+2026-08-24T06:47:39Z WARN: CloudInfraService TCP up but grpc_cli ls did not list CloudInfraService (install grpc_cli or allow namely/grpc-cli)
+
+STATUS CHECK                        DETAIL
+------ -----                        ------
+PASS   DPU Linux kernel             Linux 5.15.0-1042-bluefield aarch64
+PASS   NVIDIA DOCA / mlx5 runtime   modules or DOCA/SPDK units present
+PASS   socket directory             /var/tmp is traversable
+PASS   vendor IPC sockets           /var/tmp/spdk.sock 
+PASS   docker                       Docker version 26.1.3, build b72abbb
+PASS   OPI bridge launch            opi-dpu-bridge image=ghcr.io/opiproject/opi-nvidia-bridge:main -v /var/tmp:/var/tmp -p 50051:50051
+PASS   TCP listener :50051          LISTEN 0      4096         0.0.0.0:50051      0.0.0.0:*    users:(("docker-proxy",pid=2059260,fd=4))               
+WARN   CloudInfraService            TCP up but grpc_cli ls did not list CloudInfraService (install grpc_cli or allow namely/grpc-cli)
+
+DPU bring-up: 7 passed, 0 failed, 1 warnings (vendor=nvidia image=ghcr.io/opiproject/opi-nvidia-bridge:main)

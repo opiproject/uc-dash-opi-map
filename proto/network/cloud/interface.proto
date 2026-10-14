@@ -1,0 +1,40 @@
+// Subset of opiproject/opi-api network/cloud/interface.proto
+// Field numbers match upstream (HostIfSpec is field 8 on InterfaceSpec).
+
+syntax = "proto3";
+
+package opi_api.network.cloud.v1alpha1;
+
+option go_package = "dash-opi-map/dpu-cloudinfra/api/network/cloud";
+
+message Interface {
+  string name = 1;
+  InterfaceSpec spec = 2;
+  InterfaceStatus status = 3;
+}
+
+message InterfaceSpec {
+  int32 ifid = 1;
+  IfStatus admin_status = 2;
+  oneof ifinfo {
+    HostIfSpec host_if_spec = 8;
+  }
+}
+
+message HostIfSpec {
+  bool vf = 1;
+  bool enable_connection_tracking = 2;
+  bytes mac_address = 3;
+  string ifname = 4;
+}
+
+message InterfaceStatus {
+  uint32 if_index = 1;
+  IfStatus oper_status = 2;
+}
+
+enum IfStatus {
+  IF_STATUS_UNSPECIFIED = 0;
+  IF_STATUS_UP = 1;
+  IF_STATUS_DOWN = 2;
+}

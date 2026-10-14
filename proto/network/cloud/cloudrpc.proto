@@ -1,0 +1,128 @@
+// Subset of opiproject/opi-api network/cloud/cloudrpc.proto
+// Service and RPC names match CloudInfraService so libsai_opi can call a
+// mock OPI server (or a real one) without a different client stub.
+
+syntax = "proto3";
+
+package opi_api.network.cloud.v1alpha1;
+
+option go_package = "dash-opi-map/dpu-cloudinfra/api/network/cloud";
+
+import "google/protobuf/empty.proto";
+import "network/cloud/vnic.proto";
+import "network/cloud/interface.proto";
+import "network/cloud/vpc.proto";
+import "network/cloud/subnet.proto";
+import "network/cloud/route.proto";
+import "network/cloud/networkpolicy.proto";
+
+service CloudInfraService {
+  rpc CreateVnic(CreateVnicRequest) returns (Vnic);
+  rpc DeleteVnic(DeleteVnicRequest) returns (google.protobuf.Empty);
+  rpc CreateInterface(CreateInterfaceRequest) returns (Interface);
+  rpc DeleteInterface(DeleteInterfaceRequest) returns (google.protobuf.Empty);
+  rpc CreateVpc(CreateVpcRequest) returns (Vpc);
+  rpc DeleteVpc(DeleteVpcRequest) returns (google.protobuf.Empty);
+  rpc CreateSubnet(CreateSubnetRequest) returns (Subnet);
+  rpc DeleteSubnet(DeleteSubnetRequest) returns (google.protobuf.Empty);
+  rpc CreateRouteTable(CreateRouteTableRequest) returns (RouteTable);
+  rpc DeleteRouteTable(DeleteRouteTableRequest) returns (google.protobuf.Empty);
+  rpc CreateRoute(CreateRouteRequest) returns (Route);
+  rpc DeleteRoute(DeleteRouteRequest) returns (google.protobuf.Empty);
+  rpc CreateSecurityPolicy(CreateSecurityPolicyRequest) returns (SecurityPolicy);
+  rpc DeleteSecurityPolicy(DeleteSecurityPolicyRequest)
+      returns (google.protobuf.Empty);
+  rpc CreateSecurityRule(CreateSecurityRuleRequest) returns (SecurityRule);
+  rpc DeleteSecurityRule(DeleteSecurityRuleRequest)
+      returns (google.protobuf.Empty);
+}
+
+message CreateVnicRequest {
+  string parent = 1;
+  Vnic vnic = 2;
+  string vnic_id = 3;
+}
+
+message DeleteVnicRequest {
+  string name = 1;
+  bool allow_missing = 2;
+}
+
+message CreateInterfaceRequest {
+  string parent = 1;
+  Interface interface = 2;
+  string interface_id = 3;
+}
+
+message DeleteInterfaceRequest {
+  string name = 1;
+  bool allow_missing = 2;
+}
+
+message CreateVpcRequest {
+  string parent = 1;
+  Vpc vpc = 2;
+  string vpc_id = 3;
+}
+
+message DeleteVpcRequest {
+  string name = 1;
+  bool allow_missing = 2;
+}
+
+message CreateSubnetRequest {
+  string parent = 1;
+  Subnet subnet = 2;
+  string subnet_id = 3;
+}
+
+message DeleteSubnetRequest {
+  string name = 1;
+  bool allow_missing = 2;
+}
+
+message CreateRouteTableRequest {
+  string parent = 1;
+  // Field names match opiproject/opi-api (wire numbers identical either way).
+  RouteTable routetable = 2;
+  string routetable_id = 3;
+}
+
+message DeleteRouteTableRequest {
+  string name = 1;
+  bool allow_missing = 2;
+}
+
+message CreateRouteRequest {
+  string parent = 1;
+  Route route = 2;
+  string route_id = 3;
+}
+
+message DeleteRouteRequest {
+  string name = 1;
+  bool allow_missing = 2;
+}
+
+message CreateSecurityPolicyRequest {
+  string parent = 1;
+  // Field names match opiproject/opi-api.
+  SecurityPolicy securitypolicy = 2;
+  string securitypolicy_id = 3;
+}
+
+message DeleteSecurityPolicyRequest {
+  string name = 1;
+  bool allow_missing = 2;
+}
+
+message CreateSecurityRuleRequest {
+  string parent = 1;
+  SecurityRule securityrule = 2;
+  string securityrule_id = 3;
+}
+
+message DeleteSecurityRuleRequest {
+  string name = 1;
+  bool allow_missing = 2;
+}

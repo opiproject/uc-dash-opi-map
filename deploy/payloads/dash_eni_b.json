@@ -1,0 +1,10 @@
+{
+  "eni": "001A2B3C4D5F",
+  "eni_id": "6a8c0e21-9b4d-4f11-8c2a-0e7b1d4a9c33",
+  "mac_address": "00-1A-2B-3C-4D-5F",
+  "qos": "qos1",
+  "underlay_ip": "25.1.1.2",
+  "admin_state": "enabled",
+  "vnet": "Vnet1",
+  "mode": "vm_mode"
+}

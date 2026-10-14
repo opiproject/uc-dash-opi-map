@@ -1,0 +1,218 @@
+# Machine-readable DASH SAI → OPI Cloud protobuf mapping.
+# Sources: sonic-net/DASH SAI specs + opencomputeproject/SAI experimental
+# headers, and opiproject/opi-api network/cloud protos.
+package: opi_api.network.cloud.v1alpha1
+grpc_service: CloudInfraService
+
+header_aliases:
+  saieni.h: experimental/saiexperimentaldasheni.h
+  saidash.h:
+    - experimental/saiexperimentaldasheni.h
+    - experimental/saiexperimentaldashvnet.h
+    - experimental/saiexperimentaldashoutboundrouting.h
+    - experimental/saiexperimentaldashacl.h
+    - experimental/saiextensions.h
+
+objects:
+  - dash_object: ENI
+    dash_sai_type: SAI_OBJECT_TYPE_ENI
+    dash_header: experimental/saiexperimentaldasheni.h
+    dash_api: sai_dash_eni_api_t
+    dash_api_enum: SAI_API_DASH_ENI
+    opi_messages:
+      - Vnic
+      - VnicSpec
+      - VnicStatus
+    opi_proto: network/cloud/vnic.proto
+    grpc:
+      - CreateVnic
+      - GetVnic
+      - UpdateVnic
+      - DeleteVnic
+    related:
+      - dash_sai_type: SAI_OBJECT_TYPE_ENI_ETHER_ADDRESS_MAP_ENTRY
+        opi_messages: [Mapping, L2MappingKey]
+        opi_proto: network/cloud/mapping.proto
+      - note: Host PF/VF attachment
+        opi_messages: [Interface, HostIfSpec]
+        opi_proto: network/cloud/interface.proto
+    attributes:
+      - dash: object id
+        opi: Vnic.name
+      - dash: SAI_ENI_ATTR_ADMIN_STATE
+        opi: InterfaceSpec.admin_status
+      - dash: SAI_ENI_ATTR_VNET_ID
+        opi: VnicSpec.subnet_name_ref → SubnetSpec.vpc_name_ref
+      - dash: SAI_ENI_ATTR_VM_VNI
+        opi: VnicSpec.fabric_encap.value.vnid
+      - dash: SAI_ENI_ATTR_VM_UNDERLAY_DIP
+        opi: MappingSpec.tunnel_name_ref / VnicSpec.service_ip
+      - dash: eni_ether_address_map_entry.address
+        opi: VnicSpec.mac_address
+      - dash: SAI_ENI_ATTR_CPS
+        opi: VnicSpec.max_cps
+      - dash: SAI_ENI_ATTR_FLOWS
+        opi: VnicSpec.max_sessions
+      - dash: SAI_ENI_ATTR_INBOUND_V4_STAGE{1-5}_DASH_ACL_GROUP_ID
+        opi: VnicSpec.ingress_v4_security_policy_name_ref
+      - dash: SAI_ENI_ATTR_INBOUND_V6_STAGE{1-5}_DASH_ACL_GROUP_ID
+        opi: VnicSpec.ingress_v6_security_policy_name_ref
+      - dash: SAI_ENI_ATTR_OUTBOUND_V4_STAGE{1-5}_DASH_ACL_GROUP_ID
+        opi: VnicSpec.egress_v4_security_policy_name_ref
+      - dash: SAI_ENI_ATTR_OUTBOUND_V6_STAGE{1-5}_DASH_ACL_GROUP_ID
+        opi: VnicSpec.egress_v6_security_policy_name_ref
+      - dash: SAI_ENI_ATTR_OUTBOUND_ROUTING_GROUP_ID
+        opi: VnicSpec.v4_route_table_name_ref / v6_route_table_name_ref
+    stats:
+      sai_api: sai_get_eni_stats
+      grpc_service: TelemetryService
+      grpc:
+        - GetVnicMetrics
+      opi_proto: telemetry/v1/telemetry.proto
+      opi_message: VnicMetrics
+      note: Official inventory.proto is SMBIOS-only. Packet/byte counters live on TelemetryService, served on the same gRPC endpoint as CloudInfraService.
+      counters:
+        - dash: SAI_ENI_STAT_RX_BYTES
+          opi: VnicMetrics.rx_bytes
+        - dash: SAI_ENI_STAT_RX_PACKETS
+          opi: VnicMetrics.rx_packets
+        - dash: SAI_ENI_STAT_TX_BYTES
+          opi: VnicMetrics.tx_bytes
+        - dash: SAI_ENI_STAT_TX_PACKETS
+          opi: VnicMetrics.tx_packets
+        - dash: SAI_ENI_STAT_FORWARDING_DROP_PACKETS
+          opi: VnicMetrics.forwarding_drops
+        - dash: SAI_ENI_STAT_POLICY_DROP_PACKETS
+          opi: VnicMetrics.policy_drops
+        - dash: SAI_ENI_STAT_OTHER_DROP_PACKETS
+          opi: VnicMetrics.rx_drops + tx_drops
+        - dash: SAI_ENI_STAT_TOTAL_DROP_PACKETS
+          opi: rx_drops + tx_drops + policy_drops + forwarding_drops
+
+  - dash_object: VNET
+    dash_sai_type: SAI_OBJECT_TYPE_VNET
+    dash_header: experimental/saiexperimentaldashvnet.h
+    dash_api: sai_dash_vnet_api_t
+    dash_api_enum: SAI_API_DASH_VNET
+    opi_messages:
+      - Vpc
+      - VpcSpec
+      - VpcStatus
+    opi_proto: network/cloud/vpc.proto
+    grpc:
+      - CreateVpc
+      - GetVpc
+      - UpdateVpc
+      - DeleteVpc
+    related:
+      - note: Optional IP scope for Vnic attachment
+        opi_messages: [Subnet, SubnetSpec]
+        opi_proto: network/cloud/subnet.proto
+    attributes:
+      - dash: object id
+        opi: Vpc.name
+      - dash: SAI_VNET_ATTR_VNI
+        opi: VpcSpec.fabric_encap.value.vnid
+      - dash: implicit tenant overlay
+        opi: VpcSpec.type = VPC_TYPE_TENANT
+
+  - dash_object: Outbound Routing
+    dash_sai_type: SAI_OBJECT_TYPE_OUTBOUND_ROUTING_GROUP
+    dash_entry_type: SAI_OBJECT_TYPE_OUTBOUND_ROUTING_ENTRY
+    dash_header: experimental/saiexperimentaldashoutboundrouting.h
+    dash_api: sai_dash_outbound_routing_api_t
+    dash_api_enum: SAI_API_DASH_OUTBOUND_ROUTING
+    opi_messages:
+      - RouteTable
+      - RouteTableSpec
+      - Route
+      - RouteSpec
+      - RouteAttrs
+      - RouteInfo
+    opi_proto: network/cloud/route.proto
+    grpc:
+      - CreateRouteTable
+      - GetRouteTable
+      - UpdateRouteTable
+      - DeleteRouteTable
+      - CreateRoute
+      - GetRoute
+      - UpdateRoute
+      - DeleteRoute
+    attributes:
+      - dash: outbound_routing_group id
+        opi: RouteTable.name
+      - dash: sai_outbound_routing_entry_t.destination
+        opi: RouteAttrs.prefix
+      - dash: sai_outbound_routing_entry_t.outbound_routing_group_id
+        opi: RouteSpec.route_table_name_ref
+      - dash: SAI_OUTBOUND_ROUTING_ENTRY_ATTR_DST_VNET_ID
+        opi: VPCPeerNhInfo.vpc_name_ref / OverlayNextHopIPInfo.vpc_name_ref
+      - dash: SAI_OUTBOUND_ROUTING_ENTRY_ATTR_DASH_TUNNEL_ID
+        opi: RouteAttrs.tunnel_name_ref
+      - dash: SAI_OUTBOUND_ROUTING_ENTRY_ATTR_OVERLAY_IP
+        opi: OverlayNextHopIPInfo.nexthop_ip
+      - dash: SAI_OUTBOUND_ROUTING_ENTRY_ATTR_TUNNEL_KEY
+        opi: EncapVal.vnid
+    actions:
+      - dash: SAI_OUTBOUND_ROUTING_ENTRY_ACTION_ROUTE_VNET
+        opi: RouteClass.ROUTE_CLASS_VPC + eval_mapping or vpc_nh_info
+      - dash: SAI_OUTBOUND_ROUTING_ENTRY_ACTION_ROUTE_VNET_DIRECT
+        opi: RouteClass.ROUTE_CLASS_VPC + overlay_nh_ip_info
+      - dash: SAI_OUTBOUND_ROUTING_ENTRY_ACTION_ROUTE_DIRECT
+        opi: nexthop_name_ref / overlay NH
+      - dash: SAI_OUTBOUND_ROUTING_ENTRY_ACTION_ROUTE_SERVICE_TUNNEL
+        opi: RouteClass.ROUTE_CLASS_SERVICE + tunnel_name_ref
+      - dash: SAI_OUTBOUND_ROUTING_ENTRY_ACTION_DROP
+        opi: no RouteClass; use SecurityRule deny or omit prefix
+
+  - dash_object: ACL
+    dash_sai_type: SAI_OBJECT_TYPE_DASH_ACL_GROUP
+    dash_entry_type: SAI_OBJECT_TYPE_DASH_ACL_RULE
+    dash_header: experimental/saiexperimentaldashacl.h
+    dash_api: sai_dash_acl_api_t
+    dash_api_enum: SAI_API_DASH_ACL
+    opi_messages:
+      - SecurityPolicy
+      - SecurityPolicySpec
+      - SecurityRule
+      - SecurityRuleSpec
+      - SecurityRuleAttrs
+    opi_proto: network/cloud/networkpolicy.proto
+    grpc:
+      - CreateSecurityPolicy
+      - GetSecurityPolicy
+      - UpdateSecurityPolicy
+      - DeleteSecurityPolicy
+      - CreateSecurityRule
+      - GetSecurityRule
+      - UpdateSecurityRule
+      - DeleteSecurityRule
+    attributes:
+      - dash: ACL group id
+        opi: SecurityPolicy.name
+      - dash: SAI_DASH_ACL_GROUP_ATTR_IP_ADDR_FAMILY
+        opi: SecurityPolicySpec.address_family
+      - dash: SAI_DASH_ACL_RULE_ATTR_DASH_ACL_GROUP_ID
+        opi: SecurityRuleSpec.security_policy_name_ref
+      - dash: SAI_DASH_ACL_RULE_ATTR_PRIORITY
+        opi: SecurityRuleAttrs.priority
+      - dash: SAI_DASH_ACL_RULE_ATTR_SIP
+        opi: RuleMatch.l3_match src_prefix / src_ip_list
+      - dash: SAI_DASH_ACL_RULE_ATTR_DIP
+        opi: RuleMatch.l3_match dst_prefix / dst_ip_list
+      - dash: SAI_DASH_ACL_RULE_ATTR_PROTOCOL
+        opi: RuleL3Match.proto_num
+      - dash: SAI_DASH_ACL_RULE_ATTR_SRC_PORT
+        opi: RuleL4Match.ports.src_port_range
+      - dash: SAI_DASH_ACL_RULE_ATTR_DST_PORT
+        opi: RuleL4Match.ports.dst_port_range
+    actions:
+      - dash: SAI_DASH_ACL_RULE_ACTION_PERMIT
+        opi: SECURITY_RULE_ACTION_ALLOW, terminating=true
+      - dash: SAI_DASH_ACL_RULE_ACTION_DENY
+        opi: SECURITY_RULE_ACTION_DENY, terminating=true
+      - dash: SAI_DASH_ACL_RULE_ACTION_PERMIT_AND_CONTINUE
+        opi: SECURITY_RULE_ACTION_ALLOW, terminating=false
+      - dash: SAI_DASH_ACL_RULE_ACTION_DENY_AND_CONTINUE
+        opi: SECURITY_RULE_ACTION_DENY, terminating=false

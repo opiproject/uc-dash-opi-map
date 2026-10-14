@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+# SAI-Challenger testbed pointer for the docker-compose SONiC lab.
+# Dataplane (saivs/OTG) remains optional; northbound DASH uses gNMI + APPL_DB.
+npu:
+  - alias: dash-opi-lab
+    asic: opi-adapter
+    target: docker
+    client:
+      # Control plane under test is gNMI (sonic-gnmi) + sairedis-style Redis APPL_DB.
+      config: gnmi
+      addr: "${GNMI_ADDR:-127.0.0.1:8080}"
+      redis: "${REDIS_ADDR:-127.0.0.1:6379}"
+      opi: "${OPI_SERVER_ADDRESS:-127.0.0.1:50051}"
+links: []
